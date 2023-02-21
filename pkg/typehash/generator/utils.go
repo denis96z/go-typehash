@@ -32,20 +32,14 @@ func updateCtxFromAny(ctx hash.Hash, v any) {
 	switch val.Kind() {
 	case reflect.Struct:
 		updateCtxFromStruct(ctx, val)
+	default:
+		updateCtxFromSimple(ctx, val)
 	}
 }
 
 func updateCtxFromStruct(ctx hash.Hash, val reflect.Value) {
 	for i := 0; i < val.NumField(); i++ {
-		f := val.Type().Field(i)
-		switch f.Type.Kind() {
-		case reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
-			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.String:
-			updateCtxFromSimple(ctx, val.Field(i))
-
-		case reflect.Struct:
-			updateCtxFromStruct(ctx, val.Field(i))
-		}
+		updateCtxFromAny(ctx, val.Field(i))
 	}
 }
 

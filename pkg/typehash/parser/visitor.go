@@ -29,11 +29,16 @@ func (v *visitor) Visit(n ast.Node) (w ast.Visitor) {
 		if n.Doc == nil {
 			return nil
 		}
+		ok := false
 		for _, cmt := range n.Doc.List {
 			txt := GetCommentText(cmt.Text)
-			if txt != "typehash:md5" {
-				return nil
+			if txt == "typehash:md5" {
+				ok = true
+				break
 			}
+		}
+		if !ok {
+			return nil
 		}
 		return v
 
@@ -44,9 +49,6 @@ func (v *visitor) Visit(n ast.Node) (w ast.Visitor) {
 				Name: n.Name.Name,
 			},
 		)
-		return v
-
-	case *ast.StructType:
 		return v
 	}
 	return nil
