@@ -18,7 +18,7 @@ import (
 
 func GenerateCodeForType(v any, tpName string) string {
 	ctx := md5.New()
-	updateCtxFromAnyType(ctx, v)
+	updateCtxFromAny(ctx, reflect.TypeOf(v))
 
 	s := "func (v " + tpName + ") TypeHash() string {\n"
 	s += fmt.Sprintf("return %q\n", hex.EncodeToString(ctx.Sum(nil)))
@@ -27,31 +27,26 @@ func GenerateCodeForType(v any, tpName string) string {
 	return s
 }
 
-func updateCtxFromAnyType(ctx hash.Hash, v any) {
-	val := reflect.ValueOf(v)
-	switch val.Kind() {
+func updateCtxFromAny(ctx hash.Hash, tp reflect.Type) {
+	switch tp.Kind() {
 	case reflect.Struct:
-		updateCtxFromStruct(ctx, val)
-	case reflect.Array, reflect.Slice, reflect.Map:
-		updateCtxFromComplex(ctx, val)
+		updateCtxFromStruct(ctx, tp)
+	case reflect.Array, reflect.Slice, reflect.Map, reflect.Pointer:
+		updateCtxFromAny(ctx, tp.Elem())
 	default:
-		updateCtxFromSimple(ctx, val)
+		updateCtxFromSimple(ctx, tp)
 	}
 }
 
-func updateCtxFromStruct(ctx hash.Hash, val reflect.Value) {
-	for i := 0; i < val.NumField(); i++ {
-		mustWriteString(ctx, val.Type().Field(i).Name)
-		updateCtxFromAnyType(ctx, val.Field(i))
+func updateCtxFromStruct(ctx hash.Hash, tp reflect.Type) {
+	for i := 0; i < tp.NumField(); i++ {
+		mustWriteString(ctx, tp.Field(i).Name)
+		updateCtxFromAny(ctx, tp.Field(i).Type)
 	}
 }
 
-func updateCtxFromComplex(ctx hash.Hash, val reflect.Value) {
-	updateCtxFromAnyType(ctx, val.Type().Elem())
-}
-
-func updateCtxFromSimple(ctx hash.Hash, val reflect.Value) {
-	mustWriteString(ctx, val.Type().Name())
+func updateCtxFromSimple(ctx hash.Hash, tp reflect.Type) {
+	mustWriteString(ctx, tp.Name())
 }
 
 func mustWriteString(w io.Writer, s string) {
