@@ -32,6 +32,8 @@ func updateCtxFromAny(ctx hash.Hash, v any) {
 	switch val.Kind() {
 	case reflect.Struct:
 		updateCtxFromStruct(ctx, val)
+	case reflect.Array, reflect.Slice, reflect.Map:
+		updateCtxFromComplex(ctx, val)
 	default:
 		updateCtxFromSimple(ctx, val)
 	}
@@ -41,6 +43,10 @@ func updateCtxFromStruct(ctx hash.Hash, val reflect.Value) {
 	for i := 0; i < val.NumField(); i++ {
 		updateCtxFromAny(ctx, val.Field(i))
 	}
+}
+
+func updateCtxFromComplex(ctx hash.Hash, val reflect.Value) {
+	updateCtxFromAny(ctx, val.Type().Elem())
 }
 
 func updateCtxFromSimple(ctx hash.Hash, val reflect.Value) {
