@@ -18,7 +18,7 @@ import (
 
 func GenerateCodeForType(v any, tpName string) string {
 	ctx := md5.New()
-	updateCtxFromAny(ctx, v)
+	updateCtxFromAnyType(ctx, v)
 
 	s := "func (v " + tpName + ") TypeHash() string {\n"
 	s += fmt.Sprintf("return %q\n", hex.EncodeToString(ctx.Sum(nil)))
@@ -27,7 +27,7 @@ func GenerateCodeForType(v any, tpName string) string {
 	return s
 }
 
-func updateCtxFromAny(ctx hash.Hash, v any) {
+func updateCtxFromAnyType(ctx hash.Hash, v any) {
 	val := reflect.ValueOf(v)
 	switch val.Kind() {
 	case reflect.Struct:
@@ -41,12 +41,13 @@ func updateCtxFromAny(ctx hash.Hash, v any) {
 
 func updateCtxFromStruct(ctx hash.Hash, val reflect.Value) {
 	for i := 0; i < val.NumField(); i++ {
-		updateCtxFromAny(ctx, val.Field(i))
+		mustWriteString(ctx, val.Type().Field(i).Name)
+		updateCtxFromAnyType(ctx, val.Field(i))
 	}
 }
 
 func updateCtxFromComplex(ctx hash.Hash, val reflect.Value) {
-	updateCtxFromAny(ctx, val.Type().Elem())
+	updateCtxFromAnyType(ctx, val.Type().Elem())
 }
 
 func updateCtxFromSimple(ctx hash.Hash, val reflect.Value) {
