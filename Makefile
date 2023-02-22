@@ -1,14 +1,10 @@
 .PHONY: all
-all: typehash
+all: typehash-gen
 
 .PHONY: typehash-gen
-typehash:
+typehash-gen:
 	go build -o $(PWD)/bin/typehash-gen $(PWD)/cmd/typehash-gen/...
 
 .PHONY: fmt
 fmt:
 	go fmt $(PWD)/...
-
-.PHONY: tidy
-tidy:
-	go mod tidy
